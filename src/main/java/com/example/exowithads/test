@@ -1,0 +1,110 @@
+package com.example.exowithads;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.net.Uri;
+import android.os.Bundle;
+
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.ext.ima.ImaAdsLoader;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ads.AdsMediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.util.Util;
+import static com.example.exowithads.Samples.AD_TAG_URI;
+import static com.example.exowithads.Samples.MP4_URI;
+
+public class MainActivity extends AppCompatActivity {
+
+    private PlayerView playerView;
+    private SimpleExoPlayer player;
+    private ImaAdsLoader adsLoader;
+    boolean playWhenReady = true;
+    int currentWindow = 0;
+    long playbackPosition = 0;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        playerView = findViewById(R.id.player_view);
+        adsLoader = new ImaAdsLoader(this, AD_TAG_URI);
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        initializePlayer();
+
+    }
+
+
+    private void initializePlayer1()
+    {
+
+//        player=ExoPlayerFactory.newSimpleInstance(this,new DefaultTrackSelector());
+//
+//        playerView.setPlayer(player);
+//
+//        MediaSource mediaSource = buildMediaSource(MEDIA_TAG_URI);
+//        player.prepare(mediaSource, true, false);
+//        player.setPlayWhenReady(playWhenReady);
+//        player.seekTo(currentWindow, playbackPosition);
+//
+//        player.addListener(exoPlayEventListener);
+//
+//        currentVolume=player.getVolume();
+    }
+
+    private MediaSource buildMediaSource(Uri uri) {
+        return new ExtractorMediaSource.Factory(
+                new DefaultHttpDataSourceFactory("exoplayer-codelab")).
+                createMediaSource(uri);
+    }
+
+
+    private void initializePlayer() {
+        player = ExoPlayerFactory.newSimpleInstance(this, new DefaultTrackSelector());
+        playerView.setPlayer(player);
+
+        adsLoader.setPlayer(player);
+
+        DataSource.Factory dataSourceFactory =new DefaultHttpDataSourceFactory("exoplayer-codelab");
+
+        MediaSource mediaSource =new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(MP4_URI);
+
+        MediaSource adsMediaSource =
+                new AdsMediaSource(mediaSource, dataSourceFactory, adsLoader, playerView);
+        player.prepare(adsMediaSource);
+
+        player.setPlayWhenReady(true);
+        player.seekTo(currentWindow, playbackPosition);
+
+    }
+
+
+    @Override
+    protected void onStop() {
+        adsLoader.setPlayer(null);
+        playerView.setPlayer(null);
+        player.release();
+        player = null;
+
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        adsLoader.release();
+
+        super.onDestroy();
+    }
+}
